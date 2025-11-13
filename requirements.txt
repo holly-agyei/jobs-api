@@ -1,0 +1,10 @@
+Flask==3.0.0
+Flask-SQLAlchemy==3.1.1
+Flask-Migrate==4.0.5
+Flask-CORS==4.0.0
+python-dotenv==1.0.0
+gunicorn==21.2.0
+# PostgreSQL support (optional - SQLite works for development)
+# For Python < 3.13: psycopg2-binary>=2.9.10
+# For Python >= 3.13: psycopg[binary]>=3.1.0
+
