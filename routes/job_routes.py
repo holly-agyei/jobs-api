@@ -28,6 +28,35 @@ def get_jobs():
         }), 500
 
 
+@job_bp.route('/jobs/<int:job_id>', methods=['GET'])
+def get_job(job_id):
+    """
+    GET /jobs/<job_id>
+    Fetches a specific job posting by ID.
+    Public endpoint - no authentication required.
+    
+    Args:
+        job_id: The ID of the job to fetch
+    
+    Returns:
+        200 OK: Job object
+        404 Not Found: Job not found
+    """
+    try:
+        job = Job.query.get(job_id)
+        if not job:
+            return jsonify({
+                'success': False,
+                'error': f'Job with ID {job_id} not found'
+            }), 404
+        return jsonify(job.to_dict()), 200
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': f'Failed to fetch job: {str(e)}'
+        }), 500
+
+
 @job_bp.route('/jobs', methods=['POST'])
 @require_api_key
 def create_job():
