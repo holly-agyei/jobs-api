@@ -59,7 +59,7 @@
                 <a class="side-nav__item {% if request.endpoint == 'profile.manage_profile' %}is-active{% endif %}" href="{{ url_for('profile.manage_profile') }}">
                     <span class="icon">⚙️</span> Settings
                 </a>
-                <a class="side-nav__item" href="{{ url_for('chat.chat_home') }}#help">
+                <a class="side-nav__item {% if request.endpoint == 'general.about' %}is-active{% endif %}" href="{{ url_for('general.about') }}">
                     <span class="icon">🎧</span> Help
                 </a>
             </nav>

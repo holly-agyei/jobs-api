@@ -75,14 +75,17 @@
     <div class="row g-3">
         {% for job in jobs %}
         <div class="col-md-6 col-lg-4">
-            <div class="card h-100 job-card shadow-sm">
-                <div class="card-body d-flex flex-column">
-                    <h3 class="h5 card-title">{{ job.title }}</h3>
-                    <p class="text-muted mb-0">{{ job.company }} • {{ job.location }}</p>
-                    <p class="text-muted small">{{ job.role }}</p>
-                    <p class="mb-3 flex-grow-1 text-muted">{{ job.description[:130] }}...</p>
-                    <div class="match-chip mb-3">Match Score: {{ (job.match_score * 100)|round(0) }}%</div>
-                    <a href="{{ url_for('jobs.job_detail', job_id=job.id) }}" class="btn btn-dark w-100 mt-auto">View Details</a>
+            <div class="card job-card h-100">
+                <div class="job-card__body">
+                    <p class="job-card__company">{{ job.company }} • {{ job.location }}</p>
+                    <h3 class="job-card__title">{{ job.title }}</h3>
+                    <p class="job-card__role">{{ job.role }}</p>
+                    <p class="job-card__excerpt">{{ job.description[:120] }}{% if job.description|length > 120 %}…{% endif %}</p>
+                    <div class="match-chip">
+                        <span>Match</span>
+                        <strong>{{ (job.match_score * 100)|round(0) }}%</strong>
+                    </div>
+                    <a href="{{ url_for('jobs.job_detail', job_id=job.id) }}" class="btn job-cta mt-3">View role</a>
                 </div>
             </div>
         </div>

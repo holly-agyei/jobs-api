@@ -80,6 +80,50 @@ DATABASE_URL=sqlite:////Users/holy/Documents/projects/employee portal/employee_p
 - `post_application()` logs the submission and returns a mock confirmation payload.
 - When the real Employer API is ready, replace the internals with `requests.get/post` while preserving the interface.
 
+## Instructor Q&A Cheat Sheet
+
+**How often do we hit the Employer API?**  
+`fetch_jobs()` runs on dashboard/job list loads when the cache (15 min) has expired or when the user clicks **Refresh Jobs**. `post_application()` fires once per successful submission. Everything else (profiles, chat, connections, withdrawals) happens inside our DB.
+
+**Which UI actions trigger writes or network calls?**
+
+- Dashboard/Jobs load → `fetch_jobs()` (cache-aware) + local match-score recompute.  
+- “Refresh Jobs” button → `_sync_jobs_if_needed(force=True)` to pull fresh postings.  
+- Apply → Profile validation → `Application` insert → `POST /applications` to the Employer API.  
+- Withdraw → Ownership + status checks → set `status='withdrawn'` locally (no remote call).  
+- Connection requests / chat send → Inserts into `connection_requests`/`connections`; every Socket.IO emission re-checks `User.is_connected_with`.
+
+**What happens if the Employer API is slow or offline?**  
+`fetch_jobs()` catches `requests` errors, logs them, and falls back to the bundled mock dataset so the UI never goes blank. `post_application()` still stores the record and surfaces a “saved locally but API error” toast so you can talk about graceful degradation.
+
+**How are match scores computed?**  
+`utils.helpers.update_job_match_score` intersects a profile’s `skills_list`/`certifications_list` with the job’s requirements. Missing skills reduce the percentage; once a profile is complete, those jobs bubble up to the top of the dashboard grid.
+
+**What if the Employer API deletes a job I already applied to?**  
+During sync we never delete `Job` rows that have `Application` children. The Manage Applications page also back-fills placeholder descriptions so reviewers always see the historical context even if the upstream job disappeared.
+
+**How does withdrawing work under the hood?**  
+`applications.withdraw_application` loads the row, asserts ownership, ensures the status is `submitted`/`pending`, flips it to `withdrawn`, and commits. Because the public API has no delete endpoint we treat our local status as the source of truth for both applicant and admin views.
+
+**Why can’t I chat with everyone?**  
+Only mutual `Connection` rows unlock the chat UI. Both the HTTP route and the Socket.IO `send_message` handler call `User.is_connected_with` and bail if the relationship isn’t there, so even crafted requests can’t bypass the “request → accept → chat” flow.
+
+**How are profile photos stored?**  
+Uploads land in `employee_portal/static/uploads` with a UUID filename (`secure_filename` + `Path.suffix`). Deleting a profile removes the old file. On Render you can point `PROFILE_UPLOAD_FOLDER` at a mounted disk or S3 bucket for durability.
+
+**How would you scale Socket.IO on Render?**  
+Set `SOCKETIO_MESSAGE_QUEUE` to a Redis URL and run multiple eventlet workers. Flask-SocketIO will pub/sub through Redis so rooms and typing indicators stay consistent across dynos.
+
+## Deploying to Render
+
+1. Push this repo to GitHub and create a Render “Web Service”.
+2. **Build command:** `pip install -r requirements.txt`
+3. **Start command:**  
+   `gunicorn --worker-class eventlet --workers 1 --bind 0.0.0.0:$PORT "employee_portal.app:app"`
+4. **Environment variables:** `SECRET_KEY`, `DATABASE_URL`, `EMPLOYER_API_BASE_URL`, `EMPLOYER_API_KEY`, `EMPLOYER_API_ENABLED=true`, `EMPLOYER_API_TIMEOUT=10`, and optionally `SOCKETIO_MESSAGE_QUEUE` if you add Redis for multi-instance websockets.
+5. Mount a persistent disk or external object store if you need `static/uploads` to survive deploys.
+6. On first boot run a one-off `flask shell` (or add Flask-Migrate) to execute `db.create_all()` against your Render Postgres database.
+
 ## Testing & Development Tips
 
 - Compile-time sanity check: `venv/bin/python -m compileall employee_portal`

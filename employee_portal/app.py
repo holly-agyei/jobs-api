@@ -25,10 +25,11 @@ parser.add_argument(
     help="Run with Flask debug mode enabled.",
 )
 
+app = create_app()
+
 
 def main() -> None:
     args = parser.parse_args()
-    app = create_app()
     app.debug = args.debug or app.config.get("DEBUG", False)
     socketio.run(
         app,
@@ -41,6 +42,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-
-
-
