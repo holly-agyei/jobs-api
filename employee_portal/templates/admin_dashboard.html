@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Admin Dashboard - Employee Portal{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h4 mb-0">Admin Dashboard</h1>
+    <span class="badge bg-secondary">Read-only overview</span>
+</div>
+{% if applications %}
+<div class="table-responsive shadow-sm">
+    <table class="table table-hover align-middle">
+        <thead class="table-dark">
+            <tr>
+                <th scope="col">Applicant</th>
+                <th scope="col">Job</th>
+                <th scope="col">Submitted</th>
+                <th scope="col">Status</th>
+                <th scope="col">Resume</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for application in applications %}
+            <tr>
+                <td>{{ application.user.username }} ({{ application.user.email }})</td>
+                {% if application.job %}
+                <td><a href="{{ url_for('jobs.job_detail', job_id=application.job.id) }}">{{ application.job.title }}</a></td>
+                {% else %}
+                <td><em>Job no longer available (ID: {{ application.job_id }})</em></td>
+                {% endif %}
+                <td>{{ application.submitted_at.strftime("%b %d, %Y %H:%M") }}</td>
+                <td><span class="badge bg-info text-dark">{{ application.status.title() }}</span></td>
+                <td><a href="{{ application.resume_link }}" target="_blank">View</a></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="alert alert-info">No applications submitted yet.</div>
+{% endif %}
+{% endblock %}
+

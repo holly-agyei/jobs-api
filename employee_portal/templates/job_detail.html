@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}{{ job.title }} - Employee Portal{% endblock %}
+{% block content %}
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card shadow-sm mb-4">
+            <div class="card-body">
+                <h1 class="h3">{{ job.title }}</h1>
+                <p class="text-muted">{{ job.company }} • {{ job.location }}</p>
+                <span class="badge bg-info text-dark mb-3">Match Score: {{ (job.match_score * 100)|round(0) }}%</span>
+                <h2 class="h5">About the role</h2>
+                <p>{{ job.description }}</p>
+
+                <h3 class="h6 mt-4">Required Skills</h3>
+                <ul>
+                    {% for skill in job.required_skills %}
+                    <li>{{ skill }}</li>
+                    {% endfor %}
+                </ul>
+
+                <h3 class="h6">Required Certifications</h3>
+                <ul>
+                    {% for cert in job.required_certifications %}
+                    <li>{{ cert }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card shadow-sm mb-3">
+            <div class="card-body">
+                <h2 class="h5">Apply Now</h2>
+                <p>Ready to move forward with this opportunity?</p>
+                <a href="{{ url_for('applications.apply', job_id=job.id) }}" class="btn btn-success w-100">Apply for this job</a>
+            </div>
+        </div>
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h3 class="h6">Your Profile Snapshot</h3>
+                {% if current_user.profile %}
+                <p><strong>Skills:</strong> {{ current_user.profile.skills_list|join(", ") }}</p>
+                <p><strong>Certifications:</strong> {{ current_user.profile.certifications_list|join(", ") }}</p>
+                {% else %}
+                <p class="text-muted">Complete your profile to improve match scoring.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

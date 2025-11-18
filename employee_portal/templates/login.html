@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Login - Employee Portal{% endblock %}
+{% block content %}
+<div class="auth-shell pt-4">
+    <section class="auth-stage">
+        <div class="auth-card">
+            <h1 class="auth-title">Welcome Back</h1>
+            <form method="post">
+                {{ form.hidden_tag() }}
+                <div class="auth-input mb-3">
+                    {{ form.email(class="form-control form-control-lg", placeholder="Email Address") }}
+                    {% for error in form.email.errors %}
+                        <div class="text-danger small">{{ error }}</div>
+                    {% endfor %}
+                </div>
+                <div class="auth-input mb-3">
+                    {{ form.password(class="form-control form-control-lg", placeholder="Password") }}
+                    {% for error in form.password.errors %}
+                        <div class="text-danger small">{{ error }}</div>
+                    {% endfor %}
+                </div>
+                <div class="form-check mb-3">
+                    {{ form.remember_me(class="form-check-input") }}
+                    {{ form.remember_me.label(class="form-check-label") }}
+                </div>
+                <button class="auth-btn" type="submit">{{ form.submit.label.text }}</button>
+            </form>
+            <p class="auth-footer-text mb-0">
+                Need an account?
+                <a href="{{ url_for('auth.register') }}">Create one</a>
+            </p>
+        </div>
+    </section>
+</div>
+{% endblock %}
+

@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}Employee Portal{% endblock %}</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    {% block head_extra %}{% endblock %}
+</head>
+<body>
+    <header class="global-nav">
+        <div class="global-logo">
+            <img src="{{ url_for('static', filename='images/logo.svg') }}" alt="Employee Portal Logo" class="logo-img">
+            <span>Employee Portal</span>
+        </div>
+        <nav class="global-links">
+            <a href="{{ url_for('jobs.job_list') }}">Find A Job</a>
+            <a href="{{ url_for('general.about') }}">About Us</a>
+        </nav>
+        <div class="global-auth">
+            {% if current_user.is_authenticated %}
+            <span class="me-3 text-muted">Hi, {{ current_user.username }}</span>
+            <a href="{{ url_for('auth.logout') }}" class="btn btn-outline-dark btn-sm">Sign Out</a>
+            {% else %}
+            <a href="{{ url_for('auth.login') }}" class="btn btn-outline-dark btn-sm me-2">Login</a>
+            <a href="{{ url_for('auth.register') }}" class="btn btn-dark btn-sm">Sign Up</a>
+            {% endif %}
+        </div>
+    </header>
+    <div class="app-shell">
+        {% if current_user.is_authenticated %}
+        <aside class="side-nav">
+            <div class="side-nav__logo">
+                <img src="{{ url_for('static', filename='images/logo.svg') }}" alt="Employee Portal Logo" class="logo-img">
+                <span>Employee Portal</span>
+            </div>
+            <nav class="side-nav__menu">
+                <a class="side-nav__item {% if request.endpoint == 'jobs.dashboard' %}is-active{% endif %}" href="{{ url_for('jobs.dashboard') }}">
+                    <span class="icon">▦</span> Dashboard
+                </a>
+                <div class="side-nav__group">
+                <a class="side-nav__item {% if request.endpoint in ['jobs.job_list'] %}is-active{% endif %}" href="{{ url_for('jobs.job_list') }}">
+                        <span class="icon">💼</span> Manage Jobs
+                    </a>
+                    <a class="side-nav__sublink" href="{{ url_for('jobs.job_list') }}">Active Jobs</a>
+                    <a class="side-nav__sublink" href="{{ url_for('jobs.job_list', archived='true') }}">Archived Jobs</a>
+                </div>
+                <a class="side-nav__item {% if request.endpoint == 'applications.list_applications' %}is-active{% endif %}" href="{{ url_for('applications.list_applications') }}">
+                    <span class="icon">📋</span> Manage Applications
+                </a>
+                <a class="side-nav__item {% if request.endpoint == 'chat.chat_home' %}is-active{% endif %}" href="{{ url_for('chat.chat_home') }}">
+                    <span class="icon">💬</span> Messages
+                </a>
+                <a class="side-nav__item {% if request.endpoint == 'connections.manage_connections' %}is-active{% endif %}" href="{{ url_for('connections.manage_connections') }}">
+                    <span class="icon">🔗</span> My Network
+                </a>
+                <hr>
+                <a class="side-nav__item {% if request.endpoint == 'profile.manage_profile' %}is-active{% endif %}" href="{{ url_for('profile.manage_profile') }}">
+                    <span class="icon">⚙️</span> Settings
+                </a>
+                <a class="side-nav__item" href="{{ url_for('chat.chat_home') }}#help">
+                    <span class="icon">🎧</span> Help
+                </a>
+            </nav>
+            <div class="side-nav__footer">
+                <a class="side-nav__item" href="{{ url_for('auth.logout') }}">
+                    <span class="icon">🚪</span> Sign Out
+                </a>
+            </div>
+        </aside>
+        {% endif %}
+        <main class="app-content">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <div class="container mt-2">
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endwith %}
+            <div class="container-fluid px-4 py-4">
+                {% block content %}{% endblock %}
+            </div>
+        </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js" integrity="sha384-bwE5Wdl7jF67b0IrIDFCqhzZ3ZedbgJecoEDtgV98uLNj9Ko0oHNxg2+hbsJfGc0" crossorigin="anonymous"></script>
+    <script src="{{ url_for('static', filename='js/chat.js') }}"></script>
+    {% block body_extra %}{% endblock %}
+</body>
+</html>
+

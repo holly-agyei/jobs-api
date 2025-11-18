@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}About Us - Employee Portal{% endblock %}
+{% block content %}
+<div class="about-page">
+    <section class="about-hero">
+        <div class="hero-content">
+            <h1>We help employees find the right job faster</h1>
+            <p>
+                Employee Portal lets you build polished profiles, browse curated roles,
+                connect with peers, chat in real-time, and submit applications in one seamless flow.
+            </p>
+            <div class="hero-actions">
+                <a href="{{ url_for('auth.register') }}" class="btn btn-dark">Create an Account</a>
+                <a href="{{ url_for('jobs.job_list') }}" class="btn btn-outline-dark">Explore Jobs</a>
+            </div>
+        </div>
+        <div class="hero-visual"></div>
+    </section>
+
+    <section class="about-stats">
+        {% for stat in stats %}
+        <div class="stat-card">
+            <p class="value">{{ stat.value }}</p>
+            <p class="label text-muted">{{ stat.label }}</p>
+        </div>
+        {% endfor %}
+    </section>
+
+    <section class="about-features">
+        <h2 class="mb-4">Everything you need to land the next role</h2>
+        <div class="feature-grid">
+            {% for feature in features %}
+            <article class="feature-card">
+                <h3>{{ feature.title }}</h3>
+                <p>{{ feature.description }}</p>
+            </article>
+            {% endfor %}
+        </div>
+    </section>
+
+    <section class="about-cta">
+        <div>
+            <h3>Ready to get started?</h3>
+            <p>Sign up today and unlock the full employee experience—profiles, connections, and a smarter job search.</p>
+        </div>
+        <a href="{{ url_for('auth.register') }}" class="btn btn-light">Join Now</a>
+    </section>
+</div>
+{% endblock %}
+

@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% block title %}Jobs - Employee Portal{% endblock %}
+{% block content %}
+<div class="row mb-4">
+    <div class="col-lg-3">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h2 class="h5 mb-3">Filter Jobs</h2>
+                <form method="post">
+                    {{ form.hidden_tag() }}
+                    <div class="mb-3">
+                        {{ form.role.label(class="form-label") }}
+                        {{ form.role(class="form-control") }}
+                    </div>
+                    <div class="mb-3">
+                        {{ form.location.label(class="form-label") }}
+                        {{ form.location(class="form-control") }}
+                    </div>
+                    <div class="mb-3">
+                        {{ form.skill.label(class="form-label") }}
+                        {{ form.skill(class="form-control") }}
+                    </div>
+                    <div class="mb-3">
+                        {{ form.sort_by.label(class="form-label") }}
+                        {{ form.sort_by(class="form-select") }}
+                    </div>
+                    <div class="d-grid gap-2">
+                        {{ form.submit(class="btn btn-primary") }}
+                        {% if show_archived %}
+                        <a href="{{ url_for('jobs.job_list', archived='true') }}" class="btn btn-outline-secondary">Reset</a>
+                        {% else %}
+                        <a href="{{ url_for('jobs.job_list') }}" class="btn btn-outline-secondary">Reset</a>
+                        {% endif %}
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-9">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h1 class="h4 mb-0">{% if show_archived %}Archived {% endif %}Job Listings</h1>
+            <div>
+                {% if show_archived %}
+                <a href="{{ url_for('jobs.job_list') }}" class="btn btn-outline-secondary me-2">View Active Jobs</a>
+                {% else %}
+                <a href="{{ url_for('jobs.job_list', archived='true') }}" class="btn btn-outline-secondary me-2">View Archived Jobs</a>
+                {% endif %}
+                <a href="{{ url_for('applications.list_applications') }}" class="btn btn-outline-primary">My Applications</a>
+            </div>
+        </div>
+        {% if active_role %}
+        <div class="alert alert-secondary d-flex justify-content-between align-items-center">
+            <div>
+                Showing openings for <strong>{{ active_role }}</strong>
+            </div>
+            {% if show_archived %}
+            <a href="{{ url_for('jobs.job_list', archived='true') }}" class="btn btn-sm btn-outline-dark">Clear filter</a>
+            {% else %}
+            <a href="{{ url_for('jobs.job_list') }}" class="btn btn-sm btn-outline-dark">Clear filter</a>
+            {% endif %}
+        </div>
+        {% endif %}
+        {% if jobs %}
+        <div class="row g-3 job-card-grid">
+            {% for job in jobs %}
+            <div class="col-md-6">
+                <div class="card h-100 job-card shadow-sm">
+                    <div class="card-body d-flex flex-column">
+                        <h3 class="h5 card-title">{{ job.title }}</h3>
+                        <p class="text-muted mb-0">{{ job.company }} • {{ job.location }}</p>
+                        <p class="text-muted small">{{ job.role }}</p>
+                        <div class="match-chip mb-2">Match Score: {{ (job.match_score * 100)|round(0) }}%</div>
+                        <p class="flex-grow-1 text-muted">{{ job.description[:120] }}...</p>
+                        <a href="{{ url_for('jobs.job_detail', job_id=job.id) }}" class="btn btn-dark w-100 mt-auto">View Details</a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="alert alert-info">No jobs match your criteria. Try adjusting the filters.</div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+

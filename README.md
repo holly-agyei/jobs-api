@@ -114,3 +114,4 @@ with app.app_context():
 - Configure secret keys, database, and message queues (if scaling Socket.IO) via environment variables.
 - Enforce HTTPS and secure cookies in production (`SESSION_COOKIE_SECURE`, `REMEMBER_COOKIE_SECURE`).
 
+

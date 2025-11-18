@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Register - Employee Portal{% endblock %}
+{% block content %}
+<div class="auth-shell pt-4">
+    <section class="auth-stage">
+        <div class="auth-card">
+            <h1 class="auth-title">Create an Account</h1>
+            <form method="post">
+                {{ form.hidden_tag() }}
+                <div class="auth-input-grid mb-3">
+                    <div>
+                        {{ form.username(class="form-control form-control-lg", placeholder="Username") }}
+                        {% for error in form.username.errors %}
+                            <div class="text-danger small">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    <div>
+                        {{ form.email(class="form-control form-control-lg", placeholder="Email Address") }}
+                        {% for error in form.email.errors %}
+                            <div class="text-danger small">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="auth-input mb-3">
+                    {{ form.password(class="form-control form-control-lg", placeholder="Password") }}
+                    {% for error in form.password.errors %}
+                        <div class="text-danger small">{{ error }}</div>
+                    {% endfor %}
+                </div>
+                <div class="auth-input mb-4">
+                    {{ form.confirm_password(class="form-control form-control-lg", placeholder="Confirm Password") }}
+                    {% for error in form.confirm_password.errors %}
+                        <div class="text-danger small">{{ error }}</div>
+                    {% endfor %}
+                </div>
+                <button class="auth-btn" type="submit">{{ form.submit.label.text }}</button>
+            </form>
+            <p class="auth-footer-text mb-0">
+                Already have an account?
+                <a href="{{ url_for('auth.login') }}">Login</a>
+            </p>
+        </div>
+    </section>
+</div>
+{% endblock %}
+
