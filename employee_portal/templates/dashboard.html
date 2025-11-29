@@ -83,7 +83,10 @@
                     <p class="job-card__excerpt">{{ job.description[:120] }}{% if job.description|length > 120 %}…{% endif %}</p>
                     <div class="match-chip">
                         <span>Match</span>
-                        <strong>{{ (job.match_score * 100)|round(0) }}%</strong>
+                        <div class="d-flex flex-column gap-1">
+                            <strong>Match: {{ job.match_score|round(1) }}/5.0</strong>
+                            <small class="text-muted">⭐ {{ job.rating|round(1) }}/5.0</small>
+                        </div>
                     </div>
                     <a href="{{ url_for('jobs.job_detail', job_id=job.id) }}" class="btn job-cta mt-3">View role</a>
                 </div>

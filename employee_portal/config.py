@@ -32,11 +32,17 @@ class Config:
     EMPLOYER_API_BASE_URL = os.getenv("EMPLOYER_API_BASE_URL", "")
     EMPLOYER_API_KEY = os.getenv("EMPLOYER_API_KEY", "")
     EMPLOYER_API_TIMEOUT = int(os.getenv("EMPLOYER_API_TIMEOUT", "10"))
+    OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
+    GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
     PROFILE_UPLOAD_FOLDER = os.getenv(
         "PROFILE_UPLOAD_FOLDER",
         (ROOT_DIR / "employee_portal" / "static" / "uploads").as_posix(),
     )
-    MAX_CONTENT_LENGTH = 5 * 1024 * 1024  # 5 MB
+    VIDEO_UPLOAD_FOLDER = os.getenv(
+        "VIDEO_UPLOAD_FOLDER",
+        (ROOT_DIR / "employee_portal" / "static" / "videos").as_posix(),
+    )
+    MAX_CONTENT_LENGTH = 200 * 1024 * 1024  # 200 MB for video uploads
 
 
 class DevelopmentConfig(Config):

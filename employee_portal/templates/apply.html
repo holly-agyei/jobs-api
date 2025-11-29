@@ -1,6 +1,80 @@
 {% extends "base.html" %}
 {% block title %}Apply - {{ job.title }}{% endblock %}
 {% block content %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const generateBtn = document.getElementById('generate-cover-letter-btn');
+    const coverLetterField = document.getElementById('cover-letter-field');
+    
+    if (generateBtn && coverLetterField) {
+        generateBtn.addEventListener('click', function() {
+            const btn = this;
+            const originalText = btn.textContent;
+            
+            // Disable button and show loading state
+            btn.disabled = true;
+            btn.textContent = '⏳ Generating...';
+            btn.classList.add('disabled');
+            
+            // Get CSRF token from the form
+            const form = document.querySelector('form');
+            const csrfToken = form ? form.querySelector('input[name="csrf_token"]')?.value : '';
+            
+            if (!csrfToken) {
+                alert('Error: CSRF token not found. Please refresh the page and try again.');
+                btn.disabled = false;
+                btn.textContent = originalText;
+                btn.classList.remove('disabled');
+                return;
+            }
+            
+            // Make API call
+            fetch('{{ url_for("applications.generate_cover_letter_route", job_id=job.id) }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken,
+                },
+                credentials: 'same-origin',
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(data => {
+                        throw new Error(data.error || `Server error: ${response.status}`);
+                    }).catch(() => {
+                        throw new Error(`Server error: ${response.status}`);
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data && data.cover_letter) {
+                    coverLetterField.value = data.cover_letter;
+                    // Show success message
+                    const successMsg = document.createElement('div');
+                    successMsg.className = 'alert alert-success alert-dismissible fade show mt-2';
+                    successMsg.innerHTML = 'Cover letter generated successfully! <button type="button" class="btn-close" data-bs-dismiss="alert"></button>';
+                    coverLetterField.parentElement.appendChild(successMsg);
+                    setTimeout(() => successMsg.remove(), 5000);
+                } else {
+                    throw new Error(data?.error || 'Failed to generate cover letter');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                const errorMsg = error.message || 'An error occurred while generating the cover letter. Please try again.';
+                alert('Error: ' + errorMsg);
+            })
+            .finally(() => {
+                // Re-enable button
+                btn.disabled = false;
+                btn.textContent = originalText;
+                btn.classList.remove('disabled');
+            });
+        });
+    }
+});
+</script>
 <div class="row">
     <div class="col-lg-7">
         <div class="card shadow-sm mb-4">
@@ -12,13 +86,20 @@
                     <div class="mb-3">
                         {{ form.resume_link.label(class="form-label") }}
                         {{ form.resume_link(class="form-control") }}
+                        <small class="text-muted">Optional. If not provided, your profile resume link will be used.</small>
                         {% for error in form.resume_link.errors %}
                         <div class="text-danger small">{{ error }}</div>
                         {% endfor %}
                     </div>
                     <div class="mb-3">
-                        {{ form.cover_letter.label(class="form-label") }}
-                        {{ form.cover_letter(class="form-control", rows=6) }}
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            {{ form.cover_letter.label(class="form-label mb-0") }}
+                            <button type="button" id="generate-cover-letter-btn" class="btn btn-sm btn-outline-primary">
+                                ✨ Generate Cover Letter
+                            </button>
+                        </div>
+                        {{ form.cover_letter(class="form-control", rows=8, id="cover-letter-field") }}
+                        <small class="text-muted">Click "Generate Cover Letter" to create a personalized cover letter using AI.</small>
                         {% for error in form.cover_letter.errors %}
                         <div class="text-danger small">{{ error }}</div>
                         {% endfor %}
@@ -35,7 +116,11 @@
         <div class="card shadow-sm">
             <div class="card-body">
                 <h3 class="h5">Profile Snapshot</h3>
+                {% if profile.resume_link %}
                 <p><strong>Resume:</strong> <a href="{{ profile.resume_link }}" target="_blank">{{ profile.resume_link }}</a></p>
+                {% else %}
+                <p><strong>Resume:</strong> <span class="text-muted">Not provided</span></p>
+                {% endif %}
                 <p><strong>Skills:</strong> {{ profile.skills_list|join(", ") }}</p>
                 <p><strong>Certifications:</strong> {{ profile.certifications_list|join(", ") }}</p>
             </div>

@@ -7,7 +7,10 @@
             <div class="card-body">
                 <h1 class="h3">{{ job.title }}</h1>
                 <p class="text-muted">{{ job.company }} • {{ job.location }}</p>
-                <span class="badge bg-info text-dark mb-3">Match Score: {{ (job.match_score * 100)|round(0) }}%</span>
+                <div class="mb-3">
+                    <span class="badge bg-primary mb-2">Match Score: {{ job.match_score|round(1) }}/5.0</span>
+                    <span class="badge bg-info text-dark mb-2">Company Rating: ⭐ {{ job.rating|round(1) }}/5.0</span>
+                </div>
                 <h2 class="h5">About the role</h2>
                 <p>{{ job.description }}</p>
 

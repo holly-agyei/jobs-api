@@ -11,8 +11,16 @@
                     <div class="mb-3">
                         {{ form.photo.label(class="form-label") }}
                         {{ form.photo(class="form-control") }}
-                        <span class="form-text">Upload JPG, PNG or GIF up to 5MB.</span>
+                        <span class="form-text">Upload JPG, PNG or GIF.</span>
                         {% for error in form.photo.errors %}
+                            <div class="text-danger small">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    <div class="mb-3">
+                        {{ form.video.label(class="form-label") }}
+                        {{ form.video(class="form-control") }}
+                        <span class="form-text">Upload a short 30-second intro video (MP4, MOV, WEBM).</span>
+                        {% for error in form.video.errors %}
                             <div class="text-danger small">{{ error }}</div>
                         {% endfor %}
                     </div>
@@ -49,6 +57,7 @@
                     <div class="mb-3">
                         {{ form.resume_link.label(class="form-label") }}
                         {{ form.resume_link(class="form-control") }}
+                        <span class="form-text">Optional link to a full resume (PDF, portfolio site, etc.).</span>
                         {% for error in form.resume_link.errors %}
                             <div class="text-danger small">{{ error }}</div>
                         {% endfor %}
@@ -89,9 +98,22 @@
                     </div>
                 </div>
                 <p><strong>Headline:</strong> {{ profile.headline or "—" }}</p>
+                {% if profile.video_filename %}
+                <p><strong>Video Intro:</strong></p>
+                <video class="w-100 mb-2" controls>
+                    <source src="{{ url_for('static', filename='videos/' ~ profile.video_filename) }}" type="video/mp4">
+                    Your browser does not support the video tag.
+                </video>
+                {% if profile.video_transcript %}
+                <p><strong>Transcript (auto-generated):</strong></p>
+                <p class="small text-muted">{{ profile.video_transcript }}</p>
+                {% endif %}
+                {% endif %}
                 <p><strong>Skills:</strong> {{ profile.skills_list|join(", ") or "—" }}</p>
                 <p><strong>Certifications:</strong> {{ profile.certifications_list|join(", ") or "—" }}</p>
-                <p><strong>Resume:</strong> <a href="{{ profile.resume_link }}" target="_blank">{{ profile.resume_link }}</a></p>
+                {% if profile.resume_link %}
+                <p><strong>Resume link:</strong> <a href="{{ profile.resume_link }}" target="_blank">{{ profile.resume_link }}</a></p>
+                {% endif %}
                 <p><strong>Experience:</strong></p>
                 <p>{{ profile.experience }}</p>
                 {% else %}

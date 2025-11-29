@@ -22,6 +22,9 @@ class Profile(db.Model):
     resume_link = db.Column(db.String(255))
     experience = db.Column(db.Text)
     photo_filename = db.Column(db.String(255))
+    video_filename = db.Column(db.String(255))
+    video_transcript = db.Column(db.Text)
+    transcript_summary = db.Column(db.Text)
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     updated_at = db.Column(
         db.DateTime,
@@ -46,8 +49,8 @@ class Profile(db.Model):
     @property
     def is_complete(self) -> bool:
         return bool(
-            self.resume_link
-            and self.experience
+            self.headline
+            and (self.summary or self.transcript_summary)
             and self.skills_list
             and self.certifications_list
         )

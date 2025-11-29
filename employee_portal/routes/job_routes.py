@@ -9,7 +9,8 @@ from employee_portal import db
 from employee_portal.forms import JobFilterForm
 from employee_portal.models.job import Job
 from employee_portal.services.employer_api_service import fetch_jobs
-from employee_portal.utils.helpers import update_job_match_score
+from employee_portal.services.company_rating_service import update_job_ratings
+from employee_portal.utils.match_scoring import update_job_match_score
 
 job_bp = Blueprint("jobs", __name__)
 
@@ -92,7 +93,7 @@ def _apply_filters(query, form: JobFilterForm):  # noqa: ANN001
     elif sort_field == "title":
         query = query.order_by(Job.title.asc())
     else:
-        query = query.order_by(Job.match_score.desc(), Job.posted_at.desc())
+        query = query.order_by(Job.match_score.desc(), Job.rating.desc(), Job.posted_at.desc())
 
     return query
 
@@ -102,6 +103,10 @@ def _apply_filters(query, form: JobFilterForm):  # noqa: ANN001
 def dashboard():
     _sync_jobs_if_needed()
     profile = current_user.profile
+    # Update company ratings if needed (can be done periodically)
+    # update_job_ratings()  # Uncomment to refresh ratings
+    
+    # Calculate match scores for all jobs
     all_jobs = Job.query.all()
     for job in all_jobs:
         update_job_match_score(job, profile)
@@ -170,6 +175,10 @@ def job_list():
     requested_role = request.args.get("role")
     show_archived = request.args.get("archived") == "true"
 
+    # Update company ratings if needed (can be done periodically)
+    # update_job_ratings()  # Uncomment to refresh ratings
+    
+    # Calculate match scores for all jobs
     all_jobs = Job.query.all()
     for job in all_jobs:
         update_job_match_score(job, profile)
@@ -197,7 +206,7 @@ def job_list():
     if form.validate_on_submit():
         query = _apply_filters(query, form)
     else:
-        query = query.order_by(Job.match_score.desc(), Job.posted_at.desc())
+        query = query.order_by(Job.match_score.desc(), Job.rating.desc(), Job.posted_at.desc())
 
     jobs = query.all()
 
@@ -216,7 +225,9 @@ def job_list():
 def job_detail(job_id: int):
     _sync_jobs_if_needed()
     job = Job.query.get_or_404(job_id)
+    # Update match score for this job
     update_job_match_score(job, current_user.profile)
+    db.session.commit()
     db.session.commit()
     return render_template("job_detail.html", job=job)
 
@@ -226,5 +237,21 @@ def job_detail(job_id: int):
 def refresh_jobs():
     _sync_jobs_if_needed(force=True)
     flash("Job listings refreshed from mock employer API.", "success")
+    return redirect(url_for("jobs.job_list"))
+
+
+@job_bp.route("/jobs/update-ratings", methods=["POST"])
+@login_required
+def update_ratings():
+    """Update company ratings for all jobs."""
+    try:
+        from employee_portal.services.company_rating_service import update_job_ratings
+        
+        update_job_ratings()
+        flash("Company ratings updated successfully.", "success")
+    except Exception as e:
+        current_app.logger.exception("Error updating ratings")
+        flash(f"Error updating ratings: {str(e)}", "error")
+    
     return redirect(url_for("jobs.job_list"))
 

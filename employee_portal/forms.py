@@ -43,16 +43,23 @@ class ProfileForm(FlaskForm):
     summary = TextAreaField("Professional Summary", validators=[Optional(), Length(max=2000)])
     skills = StringField(
         "Skills (comma separated)",
-        validators=[DataRequired(), Length(max=255)],
+        validators=[Optional(), Length(max=255)],
     )
     certifications = StringField(
         "Certifications (comma separated)",
-        validators=[DataRequired(), Length(max=255)],
+        validators=[Optional(), Length(max=255)],
     )
-    resume_link = StringField("Resume Link", validators=[DataRequired(), URL()])
+    video = FileField(
+        "30-second Video Intro (Upload video to auto-fill all fields)",
+        validators=[
+            Optional(),
+            FileAllowed(["mp4", "mov", "webm"], "Video files must be MP4, MOV or WEBM."),
+        ],
+    )
+    resume_link = StringField("Resume Link (optional)", validators=[Optional(), URL()])
     experience = TextAreaField(
         "Experience",
-        validators=[DataRequired(), Length(max=5000)],
+        validators=[Optional(), Length(max=5000)],
     )
     photo = FileField(
         "Profile Photo",
@@ -62,7 +69,7 @@ class ProfileForm(FlaskForm):
 
 
 class ApplicationForm(FlaskForm):
-    resume_link = StringField("Resume Link", validators=[DataRequired(), URL()])
+    resume_link = StringField("Resume Link (optional)", validators=[Optional(), URL()])
     cover_letter = TextAreaField(
         "Cover Letter (optional)",
         validators=[Optional(), Length(max=5000)],
@@ -78,6 +85,7 @@ class JobFilterForm(FlaskForm):
         "Sort By",
         choices=[
             ("match_score", "Best Match"),
+            ("rating", "Highest Rated"),
             ("posted_at", "Most Recent"),
             ("title", "Title"),
         ],

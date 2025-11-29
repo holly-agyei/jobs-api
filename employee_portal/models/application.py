@@ -24,7 +24,7 @@ class Application(db.Model):
         nullable=False,
         index=True,
     )
-    resume_link = db.Column(db.String(255), nullable=False)
+    resume_link = db.Column(db.String(255), nullable=True)
     skills = db.Column(db.JSON, nullable=False)
     certifications = db.Column(db.JSON, nullable=False)
     status = db.Column(db.String(50), default="submitted", nullable=False)

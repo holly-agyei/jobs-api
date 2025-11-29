@@ -15,7 +15,8 @@ class Job(db.Model):
     description = db.Column(db.Text, nullable=False)
     required_skills = db.Column(db.JSON, default=list, nullable=False)
     required_certifications = db.Column(db.JSON, default=list, nullable=False)
-    match_score = db.Column(db.Float, default=0.0)
+    rating = db.Column(db.Float, default=3.0)  # Company rating (1-5 stars)
+    match_score = db.Column(db.Float, default=0.0)  # Profile match score (0-5)
     posted_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     last_synced_at = db.Column(
         db.DateTime,

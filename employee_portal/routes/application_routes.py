@@ -1,11 +1,12 @@
-from flask import Blueprint, current_app, flash, redirect, render_template, request, url_for
+from flask import Blueprint, current_app, flash, jsonify, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 from sqlalchemy.orm import joinedload
 
-from employee_portal import db
+from employee_portal import csrf, db
 from employee_portal.forms import ApplicationForm
 from employee_portal.models.application import Application
 from employee_portal.models.job import Job
+from employee_portal.services.cover_letter_service import generate_cover_letter_safe
 from employee_portal.services.employer_api_service import post_application
 
 application_bp = Blueprint("applications", __name__, url_prefix="/applications")
@@ -130,10 +131,18 @@ def apply(job_id: int):
 
     form = ApplicationForm()
     if form.validate_on_submit():
+        # Use form resume_link if provided, otherwise use profile resume_link, or empty string
+        # Use empty string instead of None to work with existing database NOT NULL constraint
+        resume_link = ""
+        if form.resume_link.data:
+            resume_link = form.resume_link.data.strip()
+        elif profile.resume_link:
+            resume_link = profile.resume_link.strip()
+        
         application = Application(
             user=current_user,
             job=job,
-            resume_link=form.resume_link.data,
+            resume_link=resume_link,
             skills=profile.skills_list,
             certifications=profile.certifications_list,
         )
@@ -143,10 +152,10 @@ def apply(job_id: int):
         application_payload = {
             "job_id": int(job.external_id),  # Convert to int for API
             "user_id": current_user.id,
-            "resume_link": form.resume_link.data,
+            "resume_link": resume_link or "",  # API might need empty string instead of None
             "skills": profile.skills_list,
             "certifications": profile.certifications_list,
-            "cover_letter": form.cover_letter.data,
+            "cover_letter": form.cover_letter.data or "",
         }
         result = post_application(application_payload)
 
@@ -159,9 +168,63 @@ def apply(job_id: int):
         return redirect(url_for("applications.list_applications"))
 
     if request.method == "GET":
-        form.resume_link.data = profile.resume_link
+        form.resume_link.data = profile.resume_link or ""
 
     return render_template("apply.html", form=form, job=job, profile=profile)
+
+
+@application_bp.route("/generate-cover-letter/<int:job_id>", methods=["POST"])
+@login_required
+@csrf.exempt
+def generate_cover_letter_route(job_id: int):
+    """Generate a cover letter using AI for the specified job."""
+    try:
+        job = Job.query.get_or_404(job_id)
+        profile = current_user.profile
+
+        current_app.logger.info(f"Cover letter generation request - User: {current_user.id}, Job: {job_id}")
+
+        if profile is None:
+            current_app.logger.warning(f"User {current_user.id} has no profile")
+            return jsonify({"error": "Please complete your profile first."}), 400
+
+        # Use transcript_summary if available, otherwise use summary
+        professional_summary = profile.transcript_summary or profile.summary or ""
+        
+        current_app.logger.info(f"Profile check - headline: {bool(profile.headline)}, summary: {len(professional_summary)} chars, skills: {len(profile.skills_list) if profile.skills_list else 0}")
+        
+        # Check for professional summary
+        if not professional_summary or not professional_summary.strip():
+            current_app.logger.warning(f"User {current_user.id} has no professional summary - transcript_summary: {bool(profile.transcript_summary)}, summary: {bool(profile.summary)}")
+            return jsonify({"error": "Please add a professional summary to your profile first. Upload a video or add a summary manually."}), 400
+
+        # Skills are optional but helpful
+        skills_list = profile.skills_list or []
+
+        current_app.logger.info(f"Generating cover letter - summary length: {len(professional_summary)}")
+
+        cover_letter = generate_cover_letter_safe(
+            professional_summary=professional_summary,
+            job_title=job.title,
+            company=job.company,
+            job_location=job.location,
+            job_description=job.description or "No description available",
+            candidate_name=current_user.username,
+            candidate_email=current_user.email,
+            skills=skills_list,
+            certifications=profile.certifications_list or [],
+        )
+
+        if cover_letter:
+            current_app.logger.info(f"Cover letter generated successfully - {len(cover_letter)} chars")
+            return jsonify({"cover_letter": cover_letter})
+        else:
+            current_app.logger.error("Cover letter generation returned None")
+            return jsonify({"error": "Failed to generate cover letter. Please check your API key and try again."}), 500
+            
+    except Exception as e:
+        current_app.logger.exception(f"Error generating cover letter: {e}")
+        return jsonify({"error": f"An error occurred: {str(e)}"}), 500
 
 
 @application_bp.route("/withdraw/<int:application_id>", methods=["POST"])
